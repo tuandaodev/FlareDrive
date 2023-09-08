@@ -35,3 +35,4 @@ There is no built-in authentication support. By default everyone can read and wr
 2. In **Access**->**Applications**, create a self-hosted application
 3. Set **Path** as `api/write/` to disable public write or leave it blank to disable public read
 4. Create a policy which accepts your email only
+ 
