@@ -431,8 +431,12 @@ export default {
     async renameFile(key) {
       const newName = window.prompt("Rename to:");
       if (!newName) return;
+
+      this.loading = true;
       await this.copyPaste(key, `${this.cwd}${newName}`);
       await axios.delete(`/api/write/items/${key}`);
+      this.loading = false;
+
       this.fetchFiles();
     },
 
