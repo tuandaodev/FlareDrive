@@ -2,6 +2,10 @@ import { notFound, parseBucketPath } from "@/utils/bucket";
 
 export async function onRequestGet(context) {
   const { request, env } = context;
+
+  //const url = new URL(request.url);
+  //return new Response('Unauthorized', { status: 200 });
+
   if (!await verifyToken(request, env.HASH_SECRET_KEY)) {
     return new Response('Unauthorized', { status: 401 });
   }
@@ -37,7 +41,7 @@ async function verifyToken(request, secret) {
   if (!verifyTime(timestamp))
     return false;
 
-  const expectedHMAC = await calculateHMAC(timestamp, secret, url.pathname);
+  const expectedHMAC = await calculateHMAC(timestamp, secret, decodeURIComponent(url.pathname));
 
   // Compare the expected HMAC with the provided token
   if (token === expectedHMAC) {

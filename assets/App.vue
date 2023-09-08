@@ -90,7 +90,7 @@
       </li>
       <li v-for="file in filteredFiles" :key="file.key">
         <a
-          :href="`/raw/${file.key}`"
+          @click="downloadLink(`/raw/${file.key}`)"
           target="_blank"
           @contextmenu.prevent="
             showContextMenu = true;
@@ -159,7 +159,7 @@
           </button>
         </li>
         <li>
-          <a :href="`/raw/${focusedItem.key}`" target="_blank" download>
+          <a @click="copyLink(`/raw/${focusedItem.key}`)">
             <span>Download</span>
           </a>
         </li>
@@ -196,6 +196,7 @@ export default {
     cwd: new URL(window.location).searchParams.get("p") || "",
     files: [],
     folders: [],
+    token: null,
     focusedItem: null,
     loading: false,
     order: null,
@@ -228,9 +229,38 @@ export default {
   },
 
   methods: {
-    copyLink(link) {
-      const url = new URL(link, window.location.origin);
+
+    async downloadLink(link) {
+      const token = await this.generateToken(link);
+      let url = new URL(link, window.location.origin);
+      url.searchParams.append('verify', token);
+
+      window.location.href = url.toString();
+    },
+
+    async copyLink(link) {
+      //const token = await this.generateToken(link);
+      let url = new URL(link, window.location.origin);
+      //url.searchParams.append('verify', token);
       navigator.clipboard.writeText(url.toString());
+    },
+
+    async generateToken(path) {
+      //console.log(path);
+      const timestamp = Math.round(Date.now()/1000);
+      const hash = await this.calculateHMAC(timestamp, this.token, path);
+      return timestamp + '-' + hash;
+    },
+
+    async calculateHMAC(timestamp, secretKey, path) {
+      const textToSign = path + timestamp;
+      const encoder = new TextEncoder();
+      const data = encoder.encode(textToSign);
+      const key = encoder.encode(secretKey);
+      const hashBuffer = await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+      const signatureBuffer = await crypto.subtle.sign('HMAC', hashBuffer, data);
+      const signatureArray = Array.from(new Uint8Array(signatureBuffer));
+      return btoa(String.fromCharCode(...signatureArray));
     },
 
     async copyPaste(source, target) {
@@ -274,6 +304,7 @@ export default {
             });
           }
           this.folders = files.folders;
+          this.token = files.token;
           this.loading = false;
         });
     },
