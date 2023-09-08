@@ -159,7 +159,7 @@
           </button>
         </li>
         <li>
-          <a @click="copyLink(`/raw/${focusedItem.key}`)">
+          <a @click="downloadLink(`/raw/${focusedItem.key}`)">
             <span>Download</span>
           </a>
         </li>
